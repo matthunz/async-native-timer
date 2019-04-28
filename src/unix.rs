@@ -35,49 +35,30 @@ impl Evented for NativeTimer {
     }
 }
 
+fn as_timespec(time: Duration) -> libc::timespec {
+    libc::timespec {
+            tv_sec: time.as_secs() as libc::time_t,
+            tv_nsec: time.subsec_nanos() as libc::suseconds_t,
+    }
+}
+
 impl RawTimer for NativeTimer {
     fn new_timer() -> Self {
         let fd = unsafe { timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK) };
         NativeTimer { fd }
     }
-    fn set_timer(&mut self, time: Duration) {
-        let it_value = libc::timespec {
-            tv_sec: time.as_secs() as libc::time_t,
-            tv_nsec: time.subsec_nanos() as libc::suseconds_t,
+    fn set_timer(&mut self, time: Duration, interval: Option<Duration>) {
+        let it_interval = match interval {
+            Some(dur) => as_timespec(dur),
+            None => unsafe { std::mem::zeroed() },
+        };
+        let timer = libc::itimerspec {
+            it_value: as_timespec(time),
+            it_interval,
+            
         };
 
-        let timer = libc::itimerspec {
-            it_interval: unsafe { std::mem::zeroed() },
-            it_value,
-        };
         let ret = unsafe { libc::timerfd_settime(self.fd, 0, &timer, std::ptr::null_mut()) };
         assert_eq!(ret, 0);
     }
 }
-/*
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    use mio::Events;
-    use std::time::Instant;
-    #[test]
-    fn it_works() {
-        let mut timer = NativeTimer::new_timer();
-
-        let time = Duration::from_secs(2);
-        let start = Instant::now();
-        timer.set_timer(time);
-
-        let mut events = Events::with_capacity(10);
-        let poll = Poll::new().unwrap();
-        poll.register(&timer, Token(0), Ready::all(), PollOpt::edge())
-            .unwrap();
-
-        poll.poll(&mut events, None).unwrap();
-        let elapsed = Instant::now() - start;
-        let err = Duration::from_millis(5);
-        assert!(elapsed < (time + err) && elapsed > (time - err));
-    }
-}
-*/
