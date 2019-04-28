@@ -1,7 +1,13 @@
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
+use mio::Evented;
+use std::time::Duration;
+
+
+#[cfg(unix)]
+#[path = "unix.rs"]
+pub mod unix;
+pub use unix::UnixTimer;
+
+pub trait RawTimer: Evented {
+    fn new_timer() -> Self;
+    fn set_timer(&mut self, time: Duration);
 }
