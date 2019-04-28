@@ -54,7 +54,7 @@ impl RawTimer for UnixTimer {
         assert_eq!(ret, 0);
     }
 }
-
+/*
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -80,3 +80,4 @@ mod tests {
         assert!(elapsed < (time + err) && elapsed > (time - err));
     }
 }
+*/

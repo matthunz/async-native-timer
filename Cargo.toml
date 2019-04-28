@@ -9,6 +9,7 @@ name = "futures"
 
 [dependencies]
 mio = "0.6.16"
+romio = { git = "https://github.com/withoutboats/romio/" }
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2.53"
