@@ -7,11 +7,11 @@ use std::os::unix::io::RawFd;
 use std::time::Duration;
 
 
-pub struct UnixTimer {
+pub struct NativeTimer {
     fd: RawFd,
 }
 
-impl Evented for UnixTimer {
+impl Evented for NativeTimer {
     fn register(
         &self,
         poll: &Poll,
@@ -35,10 +35,10 @@ impl Evented for UnixTimer {
     }
 }
 
-impl RawTimer for UnixTimer {
+impl RawTimer for NativeTimer {
     fn new_timer() -> Self {
         let fd = unsafe { timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK) };
-        Self { fd }
+        NativeTimer { fd }
     }
     fn set_timer(&mut self, time: Duration) {
         let it_value = libc::timespec {
@@ -63,7 +63,7 @@ mod tests {
     use std::time::Instant;
     #[test]
     fn it_works() {
-        let mut timer = UnixTimer::new_timer();
+        let mut timer = NativeTimer::new_timer();
 
         let time = Duration::from_secs(2);
         let start = Instant::now();

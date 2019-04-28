@@ -5,11 +5,11 @@ use std::pin::Pin;
 use std::task;
 use std::time::Duration;
 
-
 #[cfg(unix)]
 #[path = "unix.rs"]
-pub mod unix;
-pub use unix::UnixTimer;
+pub mod raw;
+
+pub use raw::NativeTimer;
 
 
 pub trait RawTimer: Evented {
@@ -21,10 +21,17 @@ pub struct Timer<R: RawTimer> {
     evented: PollEvented<R>,
 }
 
+impl Timer<NativeTimer> {
+    pub fn new() -> Self {
+        Self::from_raw(NativeTimer::new_timer())
+    }
+}
+
 impl<R: RawTimer> Timer<R> {
-    pub fn new(raw: R) -> Self {
-        let evented = PollEvented::new(raw);
-        Self { evented }
+    pub fn from_raw(raw: R) -> Self {
+        Self {
+            evented: PollEvented::new(raw),
+        }
     }
 }
 
@@ -35,5 +42,16 @@ impl<R: RawTimer + Evented> Future for Timer<R> {
         Pin::new(&mut self.evented)
             .poll_read_ready(cx)
             .map(|_res| ())
+    }
+}
+
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn it_works() {
+        let timer = Timer::new();
     }
 }
