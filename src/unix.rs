@@ -7,6 +7,7 @@ use std::os::unix::io::RawFd;
 use std::time::Duration;
 
 
+/// Unix implementation of a `RawTimer` based on file descriptors
 pub struct NativeTimer {
     fd: RawFd,
 }
@@ -37,8 +38,8 @@ impl Evented for NativeTimer {
 
 fn as_timespec(time: Duration) -> libc::timespec {
     libc::timespec {
-            tv_sec: time.as_secs() as libc::time_t,
-            tv_nsec: time.subsec_nanos() as libc::suseconds_t,
+        tv_sec: time.as_secs() as libc::time_t,
+        tv_nsec: time.subsec_nanos() as libc::suseconds_t,
     }
 }
 
@@ -55,7 +56,6 @@ impl RawTimer for NativeTimer {
         let timer = libc::itimerspec {
             it_value: as_timespec(time),
             it_interval,
-            
         };
 
         let ret = unsafe { libc::timerfd_settime(self.fd, 0, &timer, std::ptr::null_mut()) };
